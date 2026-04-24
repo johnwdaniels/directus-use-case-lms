@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { fetchAllCategories, fetchCoursesCatalog, type CatalogFilters, type CatalogSort } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import { mapToCourse } from '@/lib/map-entities';
 import { parseCatalogUrl, toSearchParams, type CatalogUrlState } from '@/lib/catalog-url';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -61,7 +61,7 @@ export default function CoursesList() {
     setSearchParams(toSearchParams({ ...next, search: debouncedSearch, page: 1 }));
   }, [debouncedSearch, searchParams, setSearchParams]);
 
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
 
   const cats = useQuery({
     queryKey: ['categories', 'all-tree'],

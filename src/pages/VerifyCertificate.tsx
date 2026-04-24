@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { CheckCircle2 } from 'lucide-react';
 import { fetchCertificateByCode } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import { instructorName } from '@/lib/map-entities';
 import type { UnknownRecord } from '@/api/public';
 
 export default function VerifyCertificate() {
   const { code } = useParams<{ code: string }>();
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
 
   const q = useQuery({
     queryKey: ['certificate', code],

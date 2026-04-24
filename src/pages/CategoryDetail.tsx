@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAllCategories, fetchCategoryBySlug, fetchCoursesByCategoryIds } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import { mapToCourse } from '@/lib/map-entities';
 import type { UnknownRecord } from '@/api/public';
 import { CourseCard } from '@/components/courses/CourseCard';
@@ -15,7 +15,7 @@ function collectDescendantIds(node: CategoryTreeNode): string[] {
 
 export default function CategoryDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
   const [searchParams, setSearchParams] = useSearchParams();
   const filterState = useMemo(() => parseCatalogUrl(searchParams), [searchParams]);
   const setFilterState = (next: CatalogUrlState) =>

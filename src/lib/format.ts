@@ -1,8 +1,10 @@
 export function formatCurrency(amount: number, currency = 'USD'): string {
+  const n = typeof amount === 'number' && Number.isFinite(amount) ? amount : Number(amount);
+  const safe = Number.isFinite(n) ? n : 0;
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(safe);
   } catch {
-    return `${currency} ${amount.toFixed(2)}`;
+    return `${currency} ${safe.toFixed(2)}`;
   }
 }
 

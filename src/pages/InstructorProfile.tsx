@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ExternalLink } from 'lucide-react';
 import { fetchCoursesByInstructor, fetchInstructorById } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import { mapToCourse } from '@/lib/map-entities';
 import { instructorName } from '@/lib/map-entities';
 import type { UnknownRecord } from '@/api/public';
@@ -24,7 +24,7 @@ function socialLinks(ins: UnknownRecord) {
 
 export default function InstructorProfile() {
   const { id } = useParams<{ id: string }>();
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
 
   const insQ = useQuery({
     queryKey: ['instructor', id],

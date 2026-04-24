@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { readMe } from '@directus/sdk';
-import { directus, getDirectusUrl } from '@/lib/directus';
+import { directus, hasDirectusEnv } from '@/lib/directus';
 
 export type CurrentUser = {
   id: string;
@@ -10,7 +10,7 @@ export type CurrentUser = {
 };
 
 export function useCurrentUser() {
-  const enabled = Boolean(getDirectusUrl());
+  const enabled = hasDirectusEnv();
 
   return useQuery({
     queryKey: ['me'],

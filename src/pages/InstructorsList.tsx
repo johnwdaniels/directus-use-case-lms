@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchInstructorsPage } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import type { UnknownRecord } from '@/api/public';
 import { InstructorCard, type InstructorCardProps } from '@/components/instructors/InstructorCard';
 
 export default function InstructorsList() {
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
   const q = useQuery({
     queryKey: ['instructors', 'list'],
     enabled: hasUrl,

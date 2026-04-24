@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAllCategories } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import { categoriesToTree, type CategoryTreeNode } from '@/components/courses/CoursesFilterSidebar';
 
 function CategoryBlock({ node }: { node: CategoryTreeNode }) {
@@ -28,7 +28,7 @@ function CategoryBlock({ node }: { node: CategoryTreeNode }) {
 }
 
 export default function CategoriesList() {
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
   const q = useQuery({
     queryKey: ['categories', 'all-tree'],
     enabled: hasUrl,
