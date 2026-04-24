@@ -42,8 +42,31 @@ const courseCardFields = [
   'category.slug',
 ] as const;
 
+/**
+ * Explicit course columns only (no `*`). Public roles often cannot read internal fields like
+ * `status` / `visibility`; requesting `*` makes the entire `readItems` fail with 403.
+ */
 export const courseDetailFields = [
-  '*',
+  'id',
+  'title',
+  'slug',
+  'subtitle',
+  'description',
+  'duration_minutes',
+  'difficulty',
+  'language',
+  'price',
+  'currency',
+  'is_free',
+  'average_rating',
+  'rating_count',
+  'cover_image',
+  'learning_objectives',
+  'trailer_video_url',
+  'date_updated',
+  'enrollment_count',
+  'default_completion_threshold',
+  'default_video_player_theme',
   'instructor.id',
   'instructor.first_name',
   'instructor.last_name',

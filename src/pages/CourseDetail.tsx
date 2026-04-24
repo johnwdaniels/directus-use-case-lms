@@ -128,11 +128,41 @@ export default function CourseDetail() {
     },
   });
 
-  if (courseQuery.isError || (!courseQuery.isLoading && !course)) {
+  if (!slug?.trim()) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <h1 className="text-xl font-semibold">Invalid course link</h1>
+        <p className="mt-2 text-sm text-slate-600">The URL is missing a course slug (for example use /courses/your-course-slug).</p>
+        <Link to="/courses" className="mt-6 inline-block text-indigo-700">
+          Back to catalog
+        </Link>
+      </div>
+    );
+  }
+
+  if (courseQuery.isError) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <h1 className="text-xl font-semibold">Could not load this course</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          The catalog request failed (network, CORS, or Directus permissions). If you are not logged in, confirm the{' '}
+          <strong>Public</strong> role can read these course fields and related modules/lessons.
+        </p>
+        <Link to="/courses" className="mt-6 inline-block text-indigo-700">
+          Back to catalog
+        </Link>
+      </div>
+    );
+  }
+
+  if (!courseQuery.isLoading && !course) {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <h1 className="text-xl font-semibold">Course not found</h1>
-        <p className="mt-2 text-sm text-slate-600">This slug is not published or does not exist.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          No course matches <span className="font-mono text-slate-800">{slug}</span>. It may be unpublished, removed, or
+          not visible to anonymous users.
+        </p>
         <Link to="/courses" className="mt-6 inline-block text-indigo-700">
           Back to catalog
         </Link>
