@@ -10,7 +10,7 @@ import {
   fetchRootCategories,
   fetchTestimonialReviews,
 } from '@/api/public';
-import { getDirectusUrl } from '@/lib/directus';
+import { hasDirectusEnv } from '@/lib/directus';
 import { mapToCourse } from '@/lib/map-entities';
 import { instructorName } from '@/lib/map-entities';
 import type { UnknownRecord } from '@/api/public';
@@ -25,8 +25,15 @@ function stripScrollRow(children: ReactNode) {
   );
 }
 
+/** Course cards need a real grid (not a single flex row) so they keep a readable width. */
+function courseGrid(children: ReactNode) {
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{children}</div>
+  );
+}
+
 export default function Home() {
-  const hasUrl = Boolean(getDirectusUrl());
+  const hasUrl = hasDirectusEnv();
 
   const roots = useQuery({
     queryKey: ['categories', 'roots'],
@@ -129,7 +136,7 @@ export default function Home() {
 
         <section>
           <h2 className="mb-4 text-xl font-semibold text-slate-900">Featured courses</h2>
-          {stripScrollRow(
+          {courseGrid(
             (featured.data ?? []).map((raw) => <CourseCard key={String(raw.id)} course={mapToCourse(raw)} variant="catalog" />),
           )}
         </section>
@@ -139,7 +146,7 @@ export default function Home() {
             <h2 className="mb-4 text-xl font-semibold text-slate-900">
               Popular in {firstRootName ?? 'this category'}
             </h2>
-            {stripScrollRow(
+            {courseGrid(
               (popularCat.data ?? []).map((raw) => (
                 <CourseCard key={String(raw.id)} course={mapToCourse(raw)} variant="catalog" />
               )),
@@ -149,7 +156,7 @@ export default function Home() {
 
         <section>
           <h2 className="mb-4 text-xl font-semibold text-slate-900">Newly added</h2>
-          {stripScrollRow(
+          {courseGrid(
             (newest.data ?? []).map((raw) => <CourseCard key={String(raw.id)} course={mapToCourse(raw)} variant="catalog" />),
           )}
         </section>
