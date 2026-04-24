@@ -89,6 +89,7 @@ export type Lesson = {
 export type CourseModule = {
   id: string;
   title: string;
+  description?: string | null;
   sort_order?: number | null;
   lessons?: Lesson[] | null;
 };

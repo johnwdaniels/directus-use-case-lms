@@ -4,14 +4,14 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui-custom/EmptyState';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { ComponentShowcase } from '@/dev/ComponentShowcase';
-
-function Home() {
-  return (
-    <div className="px-4 py-8 text-slate-900 sm:px-8">
-      <ComponentShowcase />
-    </div>
-  );
-}
+import Home from '@/pages/Home';
+import CoursesList from '@/pages/CoursesList';
+import CourseDetail from '@/pages/CourseDetail';
+import CategoriesList from '@/pages/CategoriesList';
+import CategoryDetail from '@/pages/CategoryDetail';
+import InstructorsList from '@/pages/InstructorsList';
+import InstructorProfile from '@/pages/InstructorProfile';
+import VerifyCertificate from '@/pages/VerifyCertificate';
 
 function NotFound() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -35,21 +35,20 @@ export default function App() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/courses" element={<CoursesList />} />
+        <Route path="/courses/:slug" element={<CourseDetail />} />
+        <Route path="/categories" element={<CategoriesList />} />
+        <Route path="/categories/:slug" element={<CategoryDetail />} />
+        <Route path="/instructors" element={<InstructorsList />} />
+        <Route path="/instructors/:id" element={<InstructorProfile />} />
+        <Route path="/verify/:code" element={<VerifyCertificate />} />
+        <Route path="/dev" element={<ComponentShowcase />} />
         <Route
-          path="/courses"
+          path="/learn/:courseSlug"
           element={
             <PlaceholderPage
-              title="Courses"
-              description="The public catalog and course detail pages are built in a later phase. This link is here so the header matches the planned information architecture."
-            />
-          }
-        />
-        <Route
-          path="/categories"
-          element={
-            <PlaceholderPage
-              title="Categories"
-              description="Category landing pages will list courses by taxonomy. Not implemented in the component-only phase."
+              title="Course player"
+              description="The authenticated learner experience opens here after enrollment. This route exists so enrollment redirects land safely."
             />
           }
         />
