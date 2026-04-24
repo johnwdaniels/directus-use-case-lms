@@ -25,7 +25,7 @@ export function MainLayout() {
       <div className="flex min-h-dvh flex-col bg-slate-50">
         <SiteHeader />
         <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-        <main className="flex-1">
+        <main className="flex min-h-0 flex-1 flex-col">
           <Outlet />
         </main>
       </div>

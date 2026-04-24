@@ -11,6 +11,8 @@ export type CourseCardVariant = 'catalog' | 'continue' | 'compact';
 export type CourseCardProps = {
   course: Course;
   variant?: CourseCardVariant;
+  /** When set with `variant="continue"`, navigates here instead of the catalog course page. */
+  continueHref?: string;
 };
 
 function instructorDisplayName(instructor: Course['instructor']): string {
@@ -73,13 +75,17 @@ function StarRatingDisplay({ value, count }: { value: number; count: number }) {
   );
 }
 
-export function CourseCard({ course, variant = 'catalog' }: CourseCardProps) {
+export function CourseCard({ course, variant = 'catalog', continueHref }: CourseCardProps) {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
 
   const go = useCallback(() => {
+    if (variant === 'continue' && continueHref) {
+      navigate(continueHref);
+      return;
+    }
     navigate(`/courses/${encodeURIComponent(course.slug)}`);
-  }, [navigate, course.slug]);
+  }, [navigate, course.slug, variant, continueHref]);
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -97,9 +103,15 @@ export function CourseCard({ course, variant = 'catalog' }: CourseCardProps) {
   const rating = ratingValue(course);
   const count = course.rating_count ?? 0;
   const free = Boolean(course.is_free);
-  const priceNum = typeof course.price === 'string' ? Number.parseFloat(course.price) : course.price;
+  const rawPrice = course.price;
+  const priceNum =
+    typeof rawPrice === 'string'
+      ? Number.parseFloat(rawPrice)
+      : typeof rawPrice === 'number'
+        ? rawPrice
+        : Number.parseFloat(String(rawPrice ?? ''));
   const priceLabel =
-    free || priceNum === 0 || priceNum == null || Number.isNaN(priceNum)
+    free || priceNum === 0 || !Number.isFinite(priceNum)
       ? 'Free'
       : formatCurrency(priceNum, course.currency ?? 'USD');
 

@@ -3,6 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { createItem } from '@directus/sdk';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ci = createItem as any;
 import ReactPlayer from 'react-player/lazy';
 import {
   createEnrollmentForCourse,
@@ -70,15 +73,15 @@ export default function CourseDetail() {
   const courseFlat = useMemo(() => (raw ? mapToCourse(raw) : null), [raw]);
 
   const enrollment = useQuery({
-    queryKey: ['enrollment', course?.id, user?.id],
-    enabled: Boolean(course?.id && user?.id),
+    queryKey: ['enrollment', slug, user?.id],
+    enabled: Boolean(course?.id && user?.id && slug),
     queryFn: () => fetchEnrollment(course!.id, user!.id),
   });
 
   const enrollMut = useMutation({
     mutationFn: () => createEnrollmentForCourse(course!.id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['enrollment', course!.id] });
+      qc.invalidateQueries({ queryKey: ['enrollment', slug] });
       navigate(`/learn/${course!.slug}`);
     },
   });
@@ -110,7 +113,7 @@ export default function CourseDetail() {
   const reviewMut = useMutation({
     mutationFn: async () => {
       await directus.request(
-        createItem('reviews', {
+        ci('reviews', {
           course: course!.id,
           rating: reviewRating,
           title: reviewTitle || 'Review',

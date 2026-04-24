@@ -1,14 +1,38 @@
 import { aggregate, createItem, readItem, readItems, readMe } from '@directus/sdk';
-import { directus, getDirectusUrl, publicCourseFilter } from '@/lib/directus';
+import { directus, hasDirectusEnv } from '@/lib/directus';
 
 export type UnknownRecord = Record<string, unknown>;
 
+/** No generated Directus schema in this repo — relax collection typing for `readItems` / `aggregate` / etc. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ri = readItems as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rone = readItem as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const aggQuery = aggregate as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ci = createItem as any;
+
 function assertUrl() {
-  if (!getDirectusUrl()) throw new Error('VITE_DIRECTUS_URL is not set');
+  if (!hasDirectusEnv()) throw new Error('VITE_DIRECTUS_URL is not set');
 }
 
+/** Explicit fields only (avoid `*`) so Public field rules stay predictable. */
 const courseCardFields = [
-  '*',
+  'id',
+  'title',
+  'slug',
+  'subtitle',
+  'description',
+  'duration_minutes',
+  'difficulty',
+  'language',
+  'price',
+  'currency',
+  'is_free',
+  'average_rating',
+  'rating_count',
+  'cover_image',
   'instructor.id',
   'instructor.first_name',
   'instructor.last_name',
@@ -63,15 +87,31 @@ export const courseDetailFields = [
   'modules.lessons.video_duration_seconds',
   'modules.lessons.video_captions',
   'modules.lessons.video_chapters',
+  'modules.lessons.video_transcript',
   'modules.lessons.resume_from_last_position',
   'modules.lessons.completion_threshold',
+  'modules.lessons.text_body',
+  'modules.lessons.pdf_file',
+  'modules.lessons.external_url',
+  'modules.lessons.allow_embed',
+  'modules.lessons.quiz.id',
+  'modules.lessons.quiz.title',
+  'modules.lessons.quiz.description',
+  'modules.lessons.quiz.time_limit_minutes',
+  'modules.lessons.quiz.max_attempts',
+  'modules.lessons.quiz.passing_score',
+  'modules.lessons.assignment.id',
+  'modules.lessons.assignment.title',
+  'modules.lessons.assignment.description',
+  'modules.lessons.assignment.instructions',
+  'modules.lessons.assignment.due_date',
+  'modules.lessons.assignment.max_points',
 ] as const;
 
 export async function fetchFeaturedCourses() {
   assertUrl();
   return directus.request(
-    readItems('courses', {
-      filter: publicCourseFilter,
+    ri('courses', {
       sort: ['-average_rating'],
       limit: 12,
       fields: [...courseCardFields],
@@ -82,8 +122,7 @@ export async function fetchFeaturedCourses() {
 export async function fetchNewCourses() {
   assertUrl();
   return directus.request(
-    readItems('courses', {
-      filter: publicCourseFilter,
+    ri('courses', {
       sort: ['-published_at'],
       limit: 12,
       fields: [...courseCardFields],
@@ -94,8 +133,8 @@ export async function fetchNewCourses() {
 export async function fetchCoursesByCategoryId(categoryId: string, limit = 12) {
   assertUrl();
   return directus.request(
-    readItems('courses', {
-      filter: { _and: [publicCourseFilter, { category: { _eq: categoryId } }] },
+    ri('courses', {
+      filter: { category: { _eq: categoryId } },
       sort: ['-average_rating'],
       limit,
       fields: [...courseCardFields],
@@ -107,8 +146,8 @@ export async function fetchCoursesByCategoryIds(categoryIds: string[], limit = -
   assertUrl();
   if (!categoryIds.length) return [] as UnknownRecord[];
   return directus.request(
-    readItems('courses', {
-      filter: { _and: [publicCourseFilter, { category: { _in: categoryIds } }] },
+    ri('courses', {
+      filter: { category: { _in: categoryIds } },
       sort: ['-average_rating'],
       limit,
       fields: [...courseCardFields],
@@ -119,7 +158,7 @@ export async function fetchCoursesByCategoryIds(categoryIds: string[], limit = -
 export async function fetchRootCategories() {
   assertUrl();
   return directus.request(
-    readItems('categories', {
+    ri('categories', {
       filter: { parent: { _null: true } },
       sort: ['sort_order', 'name'],
       limit: -1,
@@ -131,7 +170,7 @@ export async function fetchRootCategories() {
 export async function fetchAllCategories() {
   assertUrl();
   return directus.request(
-    readItems('categories', {
+    ri('categories', {
       sort: ['sort_order', 'name'],
       limit: -1,
       fields: ['id', 'name', 'slug', 'parent', 'description', 'icon', 'course_count', 'sort_order'],
@@ -142,7 +181,7 @@ export async function fetchAllCategories() {
 export async function fetchCategoryBySlug(slug: string) {
   assertUrl();
   const rows = await directus.request(
-    readItems('categories', {
+    ri('categories', {
       filter: { slug: { _eq: slug } },
       limit: 1,
       fields: ['id', 'name', 'slug', 'description', 'icon', 'course_count', 'parent', 'sort_order'],
@@ -154,7 +193,7 @@ export async function fetchCategoryBySlug(slug: string) {
 export async function fetchFeaturedInstructors(limit = 6) {
   assertUrl();
   return directus.request(
-    readItems('directus_users', {
+    ri('directus_users', {
       filter: { is_instructor: { _eq: true } },
       sort: ['-total_students'],
       limit,
@@ -180,7 +219,7 @@ export async function fetchFeaturedInstructors(limit = 6) {
 export async function fetchInstructorsPage(limit = 48) {
   assertUrl();
   return directus.request(
-    readItems('directus_users', {
+    ri('directus_users', {
       filter: { is_instructor: { _eq: true } },
       sort: ['-total_students'],
       limit,
@@ -201,7 +240,7 @@ export async function fetchInstructorsPage(limit = 48) {
 export async function fetchInstructorById(id: string) {
   assertUrl();
   return directus.request(
-    readItem('directus_users', id, {
+    rone('directus_users', id, {
       fields: [
         'id',
         'first_name',
@@ -224,8 +263,8 @@ export async function fetchInstructorById(id: string) {
 export async function fetchCoursesByInstructor(instructorId: string) {
   assertUrl();
   return directus.request(
-    readItems('courses', {
-      filter: { _and: [publicCourseFilter, { instructor: { _eq: instructorId } }] },
+    ri('courses', {
+      filter: { instructor: { _eq: instructorId } },
       sort: ['-published_at'],
       limit: -1,
       fields: [...courseCardFields],
@@ -236,7 +275,7 @@ export async function fetchCoursesByInstructor(instructorId: string) {
 export async function fetchTestimonialReviews() {
   assertUrl();
   return directus.request(
-    readItems('reviews', {
+    ri('reviews', {
       filter: { _and: [{ rating: { _eq: 5 } }, { is_approved: { _eq: true } }] },
       sort: ['-date_created'],
       limit: 12,
@@ -258,7 +297,7 @@ export async function fetchTestimonialReviews() {
 export async function fetchCourseBySlug(slug: string) {
   assertUrl();
   const rows = await directus.request(
-    readItems('courses', {
+    ri('courses', {
       filter: { slug: { _eq: slug } },
       limit: 1,
       fields: [...courseDetailFields],
@@ -313,7 +352,7 @@ function catalogSortFields(sort: CatalogSort): string[] {
 
 export async function fetchCoursesCatalog(filters: CatalogFilters) {
   assertUrl();
-  const parts: UnknownRecord[] = [publicCourseFilter];
+  const parts: UnknownRecord[] = [];
 
   if (filters.categorySlugs?.length) {
     parts.push({ category: { slug: { _in: filters.categorySlugs } } });
@@ -349,7 +388,7 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
     parts.push({ has_certificate: { _eq: true } });
   }
 
-  const filter = { _and: parts };
+  const filter = parts.length ? { _and: parts } : undefined;
   const offset = (filters.page - 1) * filters.perPage;
   const search = filters.search?.trim() || undefined;
 
@@ -358,19 +397,19 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
   try {
     const pair = await Promise.all([
       directus.request(
-        readItems('courses', {
-          filter,
+        ri('courses', {
+          ...(filter ? { filter } : {}),
           sort: catalogSortFields(filters.sort),
           limit: filters.perPage,
           offset,
-          search,
+          ...(search ? { search } : {}),
           fields: [...courseCardFields],
         }),
       ),
       directus.request(
-        aggregate('courses', {
+        aggQuery('courses', {
           aggregate: { count: '*' },
-          query: { filter, ...(search ? { search } : {}) },
+          query: { ...(filter ? { filter } : {}), ...(search ? { search } : {}) },
         }),
       ),
     ]);
@@ -381,22 +420,22 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
     if (!Number.isFinite(total)) total = items.length;
   } catch {
     const retryParts = parts.filter((p) => !('has_certificate' in (p as object)));
-    const retryFilter = { _and: retryParts };
+    const retryFilter = retryParts.length ? { _and: retryParts } : undefined;
     const pair = await Promise.all([
       directus.request(
-        readItems('courses', {
-          filter: retryFilter,
+        ri('courses', {
+          ...(retryFilter ? { filter: retryFilter } : {}),
           sort: catalogSortFields(filters.sort),
           limit: filters.perPage,
           offset,
-          search,
+          ...(search ? { search } : {}),
           fields: [...courseCardFields],
         }),
       ),
       directus.request(
-        aggregate('courses', {
+        aggQuery('courses', {
           aggregate: { count: '*' },
-          query: { filter: retryFilter, ...(search ? { search } : {}) },
+          query: { ...(retryFilter ? { filter: retryFilter } : {}), ...(search ? { search } : {}) },
         }),
       ),
     ]);
@@ -416,7 +455,7 @@ export async function fetchReviewsForCourse(courseId: string, page: number, perP
   const filter = { _and: [{ course: { _eq: courseId } }, { is_approved: { _eq: true } }] };
   const [rows, agg] = await Promise.all([
     directus.request(
-      readItems('reviews', {
+      ri('reviews', {
         filter,
         sort: ['-date_created'],
         limit: perPage,
@@ -425,7 +464,7 @@ export async function fetchReviewsForCourse(courseId: string, page: number, perP
       }),
     ),
     directus.request(
-      aggregate('reviews', {
+      aggQuery('reviews', {
         aggregate: { count: '*' },
         query: { filter },
       }),
@@ -440,7 +479,7 @@ export async function fetchRatingHistogram(courseId: string) {
   assertUrl();
   try {
     const rows = await directus.request(
-      aggregate('reviews', {
+      aggQuery('reviews', {
         aggregate: { count: '*' },
         groupBy: ['rating'],
         query: {
@@ -458,7 +497,7 @@ export async function fetchRatingHistogram(courseId: string) {
     return map;
   } catch {
     const rows = await directus.request(
-      readItems('reviews', {
+      ri('reviews', {
         filter: { _and: [{ course: { _eq: courseId } }, { is_approved: { _eq: true } }] },
         limit: -1,
         fields: ['rating'],
@@ -476,10 +515,10 @@ export async function fetchRatingHistogram(courseId: string) {
 export async function fetchEnrollment(courseId: string, userId: string) {
   assertUrl();
   const rows = await directus.request(
-    readItems('enrollments', {
+    ri('enrollments', {
       filter: { _and: [{ course: { _eq: courseId } }, { user: { _eq: userId } }] },
       limit: 1,
-      fields: ['id', 'status', 'progress_pct'],
+      fields: ['id', 'status', 'progress_pct', 'completed_at', 'certificate_issued', 'final_grade', 'date_updated'],
     }),
   );
   return (rows as UnknownRecord[])[0] ?? null;
@@ -488,7 +527,7 @@ export async function fetchEnrollment(courseId: string, userId: string) {
 export async function createEnrollmentForCourse(courseId: string) {
   assertUrl();
   return directus.request(
-    createItem('enrollments', {
+    ci('enrollments', {
       course: courseId,
       status: 'active',
     }),
@@ -498,7 +537,7 @@ export async function createEnrollmentForCourse(courseId: string) {
 export async function fetchCertificateByCode(code: string) {
   assertUrl();
   const rows = await directus.request(
-    readItems('certificates', {
+    ri('certificates', {
       filter: { verification_code: { _eq: code } },
       limit: 1,
       fields: [
@@ -521,8 +560,7 @@ export async function fetchCertificateByCode(code: string) {
 export async function globalSearchCourses(q: string) {
   assertUrl();
   return directus.request(
-    readItems('courses', {
-      filter: publicCourseFilter,
+    ri('courses', {
       search: q,
       limit: 3,
       fields: ['id', 'title', 'slug'],
@@ -533,7 +571,7 @@ export async function globalSearchCourses(q: string) {
 export async function globalSearchCategories(q: string) {
   assertUrl();
   return directus.request(
-    readItems('categories', {
+    ri('categories', {
       search: q,
       limit: 3,
       fields: ['id', 'name', 'slug'],
@@ -544,7 +582,7 @@ export async function globalSearchCategories(q: string) {
 export async function globalSearchInstructors(q: string) {
   assertUrl();
   return directus.request(
-    readItems('directus_users', {
+    ri('directus_users', {
       filter: { is_instructor: { _eq: true } },
       search: q,
       limit: 3,
@@ -554,7 +592,7 @@ export async function globalSearchInstructors(q: string) {
 }
 
 export async function tryReadMe() {
-  if (!getDirectusUrl()) return null;
+  if (!hasDirectusEnv()) return null;
   try {
     return (await directus.request(readMe({ fields: ['id'] }))) as UnknownRecord;
   } catch {

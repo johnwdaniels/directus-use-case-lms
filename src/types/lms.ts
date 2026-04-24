@@ -63,6 +63,32 @@ export type VideoChapter = {
   title: string;
 };
 
+export type LessonResourceRow = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  file?: FileRef;
+  external_url?: string | null;
+};
+
+export type QuizRef = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  time_limit_minutes?: number | null;
+  max_attempts?: number | null;
+  passing_score?: number | null;
+};
+
+export type AssignmentRef = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  instructions?: string | null;
+  due_date?: string | null;
+  max_points?: number | string | null;
+};
+
 export type Lesson = {
   id: string;
   title: string;
@@ -82,8 +108,18 @@ export type Lesson = {
   video_thumbnail?: FileRef;
   video_captions?: VideoCaptionTrack[] | null;
   video_chapters?: VideoChapter[] | string | null;
+  video_transcript?: string | null;
   resume_from_last_position?: boolean | null;
   completion_threshold?: number | null;
+  /** Text / PDF / quiz / assignment / external */
+  text_body?: string | null;
+  pdf_file?: FileRef;
+  quiz?: QuizRef | string | { id: string } | null;
+  assignment?: AssignmentRef | string | { id: string } | null;
+  external_url?: string | null;
+  allow_embed?: boolean | null;
+  /** M2M extras (shape varies by API expansion). */
+  resources?: unknown;
 };
 
 export type CourseModule = {
@@ -99,3 +135,15 @@ export type CourseWithCurriculum = Course & {
 };
 
 export type LessonProgressStatus = 'not_started' | 'in_progress' | 'completed';
+
+export type LessonProgressRow = {
+  id: string;
+  lesson: string | { id: string };
+  enrollment?: string | { id: string } | null;
+  status?: LessonProgressStatus | null;
+  last_position_seconds?: number | null;
+  watched_seconds?: number | null;
+  last_watched_at?: string | null;
+  time_spent_seconds?: number | null;
+  completed_at?: string | null;
+};

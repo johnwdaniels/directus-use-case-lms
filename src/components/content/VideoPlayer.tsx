@@ -31,10 +31,14 @@ export type VideoPlayerProps = {
   initialPosition?: number;
   disableProgressTracking?: boolean;
   onProgress?: (state: { position: number; watched: number; duration: number }) => void;
+  /** Fired on playhead updates (used for transcript sync). */
+  onPlayheadSeconds?: (seconds: number) => void;
   onComplete?: () => void;
   autoPlayNext?: () => void;
   /** When the learner completes the video and it ends, show “Next up” if provided; otherwise show course-complete UI. */
   nextLessonTitle?: string | null;
+  /** Parent-driven seek (e.g. chapter list). Bump `id` whenever seconds should apply. */
+  seekRequest?: { id: number; seconds: number } | null;
 };
 
 function isMobileSafari(): boolean {
@@ -123,9 +127,11 @@ export function VideoPlayer({
   initialPosition,
   disableProgressTracking = false,
   onProgress,
+  onPlayheadSeconds,
   onComplete,
   autoPlayNext,
   nextLessonTitle,
+  seekRequest,
 }: VideoPlayerProps) {
   const location = useLocation();
   const theme = course.default_video_player_theme === 'dark' ? 'dark' : 'light';
@@ -136,6 +142,7 @@ export function VideoPlayer({
   const progressStoppedRef = useRef(false);
   const wallMsRef = useRef(0);
   const lastPathRef = useRef(location.pathname);
+  const lastSeekRequestIdRef = useRef(0);
 
   const [useNativeControls] = useState(() => isMobileSafari());
   const playedSecondsRef = useRef(0);
@@ -229,6 +236,7 @@ export function VideoPlayer({
     completionFiredRef.current = false;
     progressStoppedRef.current = false;
     wallMsRef.current = 0;
+    lastSeekRequestIdRef.current = 0;
     setPostEnd('idle');
     setCountdown(10);
     setPlayedSeconds(0);
@@ -318,6 +326,16 @@ export function VideoPlayer({
       setHlsLevel(null);
     }
   }, [initialPosition, lesson.resume_from_last_position]);
+
+  useEffect(() => {
+    if (!seekRequest || seekRequest.id === lastSeekRequestIdRef.current) return;
+    lastSeekRequestIdRef.current = seekRequest.id;
+    const next = Math.max(0, seekRequest.seconds);
+    playerRef.current?.seekTo(next, 'seconds');
+    playedSecondsRef.current = next;
+    setPlayedSeconds(next);
+    flushProgress();
+  }, [seekRequest, flushProgress]);
 
   const seekTo = useCallback((sec: number) => {
     const next = Math.max(0, sec);
@@ -501,6 +519,7 @@ export function VideoPlayer({
               playedSecondsRef.current = state.playedSeconds;
               setPlayedSeconds(state.playedSeconds);
               setLoaded(state.loaded);
+              onPlayheadSeconds?.(Math.floor(state.playedSeconds));
             }}
             onEnded={() => {
               setPlaying(false);

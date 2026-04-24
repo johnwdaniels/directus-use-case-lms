@@ -12,6 +12,12 @@ import CategoryDetail from '@/pages/CategoryDetail';
 import InstructorsList from '@/pages/InstructorsList';
 import InstructorProfile from '@/pages/InstructorProfile';
 import VerifyCertificate from '@/pages/VerifyCertificate';
+import MyLearning from '@/pages/learner/MyLearning';
+import MyCompleted from '@/pages/learner/MyCompleted';
+import MyCertificates from '@/pages/learner/MyCertificates';
+import MyBadges from '@/pages/learner/MyBadges';
+import MyProfile from '@/pages/learner/MyProfile';
+import CoursePlayer from '@/pages/learner/CoursePlayer';
 
 function NotFound() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -43,22 +49,21 @@ export default function App() {
         <Route path="/instructors/:id" element={<InstructorProfile />} />
         <Route path="/verify/:code" element={<VerifyCertificate />} />
         <Route path="/dev" element={<ComponentShowcase />} />
+        <Route path="/learn/:courseSlug/:lessonId" element={<CoursePlayer />} />
+        <Route path="/learn/:courseSlug" element={<CoursePlayer />} />
+        <Route path="/my/learning" element={<MyLearning />} />
+        <Route path="/my/completed" element={<MyCompleted />} />
+        <Route path="/my/certificates" element={<MyCertificates />} />
+        <Route path="/my/badges" element={<MyBadges />} />
+        <Route path="/my/profile" element={<MyProfile />} />
         <Route
-          path="/learn/:courseSlug"
-          element={
-            <PlaceholderPage
-              title="Course player"
-              description="The authenticated learner experience opens here after enrollment. This route exists so enrollment redirects land safely."
-            />
-          }
+          path="/quiz/:attemptId"
+          element={<PlaceholderPage title="Quiz attempt" description="Quiz taking UI is wired in a later step. Return to your course to continue." />}
         />
         <Route
-          path="/my/learning"
+          path="/assignment/:assignmentId"
           element={
-            <PlaceholderPage
-              title="My learning"
-              description="The authenticated learner dashboard (in progress, resume, certificates) ships with the learner routes phase."
-            />
+            <PlaceholderPage title="Assignment" description="Assignment submission UI is wired in a later step. Return to your course to continue." />
           }
         />
         <Route

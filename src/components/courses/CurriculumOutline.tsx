@@ -19,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Check, ChevronDown, GripVertical, Lock, Plus, Trash2 } from 'lucide-react';
 import { formatDurationMinutes } from '@/lib/format';
 import { LessonIcon } from '@/components/courses/LessonIcon';
+import { ProgressBar } from '@/components/courses/ProgressBar';
 import type { CourseModule, CourseWithCurriculum, Lesson, LessonProgressStatus } from '@/types/lms';
 
 export type CurriculumOutlineVariant = 'preview' | 'player' | 'instructor-editor';
@@ -31,6 +32,8 @@ export type CurriculumOutlineProps = {
   /** When `variant` is `preview`, locked lessons are still visible but not navigable. */
   isEnrolled?: boolean;
   currentLessonId?: string;
+  /** Player: overall enrollment progress at top of the outline. */
+  overallProgressPct?: number | null;
   /** Instructor editor hooks (Phase 6 wiring). */
   onRenameModule?: (moduleId: string, title: string) => void;
   onRenameLesson?: (lessonId: string, title: string) => void;
@@ -132,6 +135,7 @@ export function CurriculumOutline({
   onLessonClick,
   isEnrolled,
   currentLessonId,
+  overallProgressPct,
   onRenameModule,
   onRenameLesson,
   onAddLesson,
@@ -157,6 +161,13 @@ export function CurriculumOutline({
     if (!first) return;
     setExpanded((prev) => (Object.keys(prev).length ? prev : { [first]: true }));
   }, [variant, modulesSorted]);
+
+  useEffect(() => {
+    if (variant !== 'player') return;
+    const init: Record<string, boolean> = {};
+    for (const m of modulesSorted) init[m.id] = true;
+    setExpanded(init);
+  }, [variant, modulesSorted, course.id]);
 
   const toggleModule = useCallback((id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -319,6 +330,14 @@ export function CurriculumOutline({
 
   return (
     <div className="space-y-3">
+      {variant === 'player' && overallProgressPct != null ? (
+        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="text-xs font-medium text-slate-600">Course progress</p>
+          <div className="mt-2">
+            <ProgressBar value={Math.min(100, Math.max(0, overallProgressPct))} size="sm" showLabel />
+          </div>
+        </div>
+      ) : null}
       {variant === 'instructor-editor' ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           {moduleBlocks}

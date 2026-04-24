@@ -1,9 +1,11 @@
 import type { UnknownRecord } from '@/api/public';
 import type {
+  AssignmentRef,
   Course,
   CourseWithCurriculum,
   Lesson,
   LessonType,
+  QuizRef,
   VideoCaptionTrack,
   VideoSource,
 } from '@/types/lms';
@@ -28,6 +30,34 @@ function normalizeCaptions(v: unknown): VideoCaptionTrack[] | null {
   });
 }
 
+function mapQuizRef(v: unknown): QuizRef | null {
+  if (!v || typeof v !== 'object') return null;
+  const r = v as UnknownRecord;
+  if (!r.id) return null;
+  return {
+    id: String(r.id),
+    title: r.title != null ? String(r.title) : null,
+    description: r.description != null ? String(r.description) : null,
+    time_limit_minutes: num(r.time_limit_minutes),
+    max_attempts: num(r.max_attempts),
+    passing_score: num(r.passing_score),
+  };
+}
+
+function mapAssignmentRef(v: unknown): AssignmentRef | null {
+  if (!v || typeof v !== 'object') return null;
+  const r = v as UnknownRecord;
+  if (!r.id) return null;
+  return {
+    id: String(r.id),
+    title: r.title != null ? String(r.title) : null,
+    description: r.description != null ? String(r.description) : null,
+    instructions: r.instructions != null ? String(r.instructions) : null,
+    due_date: r.due_date != null ? String(r.due_date) : null,
+    max_points: r.max_points as AssignmentRef['max_points'],
+  };
+}
+
 export function mapLesson(raw: UnknownRecord): Lesson {
   return {
     id: String(raw.id),
@@ -46,8 +76,22 @@ export function mapLesson(raw: UnknownRecord): Lesson {
     video_thumbnail: (raw.video_thumbnail as Lesson['video_thumbnail']) ?? null,
     video_captions: normalizeCaptions(raw.video_captions),
     video_chapters: (raw.video_chapters as Lesson['video_chapters']) ?? null,
+    video_transcript: raw.video_transcript != null ? String(raw.video_transcript) : null,
     resume_from_last_position: raw.resume_from_last_position == null ? null : Boolean(raw.resume_from_last_position),
     completion_threshold: num(raw.completion_threshold),
+    text_body: raw.text_body != null ? String(raw.text_body) : null,
+    pdf_file: (raw.pdf_file as Lesson['pdf_file']) ?? null,
+    quiz:
+      typeof raw.quiz === 'string'
+        ? { id: raw.quiz }
+        : mapQuizRef(raw.quiz) ?? (raw.quiz as Lesson['quiz']),
+    assignment:
+      typeof raw.assignment === 'string'
+        ? { id: raw.assignment }
+        : mapAssignmentRef(raw.assignment) ?? (raw.assignment as Lesson['assignment']),
+    external_url: raw.external_url != null ? String(raw.external_url) : null,
+    allow_embed: raw.allow_embed == null ? null : Boolean(raw.allow_embed),
+    resources: raw.resources,
   };
 }
 
