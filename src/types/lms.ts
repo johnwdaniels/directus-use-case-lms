@@ -34,6 +34,8 @@ export type Course = {
   progress_pct?: number | null;
   last_lesson_title?: string | null;
   time_remaining_minutes?: number | null;
+  default_completion_threshold?: number | null;
+  default_video_player_theme?: 'light' | 'dark' | null;
 };
 
 export type LessonType =
@@ -49,6 +51,8 @@ export type VideoSource = 'youtube' | 'vimeo' | 'directus_file' | 'external_url'
 export type VideoCaptionTrack = {
   id?: string;
   file_id?: string | { id: string };
+  /** Some API shapes expose the related file as `file`. */
+  file?: string | { id: string };
   language_code: string;
   label: string;
   is_default?: boolean;
