@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import { directusAssetUrl } from '@/lib/assets';
 import { formatCurrency, formatDurationMinutes } from '@/lib/format';
 import type { Course } from '@/types/lms';
+import { ProgressBar } from '@/components/courses/ProgressBar';
 
 export type CourseCardVariant = 'catalog' | 'continue' | 'compact';
 
@@ -139,12 +140,7 @@ export function CourseCard({ course, variant = 'catalog' }: CourseCardProps) {
         </div>
         <div className="space-y-3 p-4">
           <h3 className="line-clamp-2 text-base font-semibold text-slate-900">{course.title}</h3>
-          <div className="space-y-1">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100" aria-hidden>
-              <div className="h-full rounded-full bg-slate-900 transition-[width]" style={{ width: `${pct}%` }} />
-            </div>
-            <p className="text-xs text-slate-600">{pct}% complete</p>
-          </div>
+          <ProgressBar value={pct} size="sm" showLabel />
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white">
               Resume
