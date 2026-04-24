@@ -131,6 +131,72 @@ export const courseDetailFields = [
   'modules.lessons.assignment.max_points',
 ] as const;
 
+const publicCourseDetailFields = [
+  'id',
+  'title',
+  'slug',
+  'subtitle',
+  'description',
+  'duration_minutes',
+  'difficulty',
+  'language',
+  'price',
+  'currency',
+  'is_free',
+  'average_rating',
+  'rating_count',
+  'cover_image',
+  'learning_objectives',
+  'trailer_video_url',
+  'date_updated',
+  'enrollment_count',
+  'default_completion_threshold',
+  'default_video_player_theme',
+  'instructor.id',
+  'instructor.first_name',
+  'instructor.last_name',
+  'instructor.avatar',
+  'instructor.bio',
+  'instructor.headline',
+  'instructor.total_students',
+  'instructor.total_courses',
+  'instructor.average_rating',
+  'category.id',
+  'category.name',
+  'category.slug',
+] as const;
+
+function categoryId(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && 'id' in value) return String((value as { id: string }).id);
+  return null;
+}
+
+function parentId(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && 'id' in value) return String((value as { id: string }).id);
+  return null;
+}
+
+function addVisibleCourseCounts(categories: UnknownRecord[], courses: UnknownRecord[]): UnknownRecord[] {
+  const byId = new Map(categories.map((c) => [String(c.id), c]));
+  const counts = new Map<string, number>();
+
+  for (const course of courses) {
+    let id = categoryId(course.category);
+    const seen = new Set<string>();
+    while (id && !seen.has(id)) {
+      seen.add(id);
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+      id = parentId(byId.get(id)?.parent);
+    }
+  }
+
+  return categories.map((c) => ({ ...c, course_count: counts.get(String(c.id)) ?? 0 }));
+}
+
 export async function fetchFeaturedCourses() {
   assertUrl();
   return directus.request(
@@ -180,14 +246,28 @@ export async function fetchCoursesByCategoryIds(categoryIds: string[], limit = -
 
 export async function fetchRootCategories() {
   assertUrl();
-  return directus.request(
+  const categories = (await directus.request(
     ri('categories', {
-      filter: { parent: { _null: true } },
       sort: ['sort_order', 'name'],
       limit: -1,
-      fields: ['id', 'name', 'slug', 'description', 'icon', 'course_count', 'sort_order'],
+      fields: ['id', 'name', 'slug', 'parent', 'description', 'icon', 'course_count', 'sort_order'],
     }),
-  ) as Promise<UnknownRecord[]>;
+  )) as UnknownRecord[];
+  const roots = categories.filter((c) => parentId(c.parent) == null);
+
+  try {
+    const courses = (await directus.request(
+      ri('courses', {
+        limit: -1,
+        fields: ['id', 'category.id'],
+      }),
+    )) as UnknownRecord[];
+    const counted = addVisibleCourseCounts(categories, courses);
+    const byId = new Map(counted.map((c) => [String(c.id), c]));
+    return roots.map((r) => byId.get(String(r.id)) ?? r);
+  } catch {
+    return roots;
+  }
 }
 
 export async function fetchAllCategories() {
@@ -319,13 +399,24 @@ export async function fetchTestimonialReviews() {
 
 export async function fetchCourseBySlug(slug: string) {
   assertUrl();
-  const rows = await directus.request(
-    ri('courses', {
-      filter: { slug: { _eq: slug } },
-      limit: 1,
-      fields: [...courseDetailFields],
-    }),
-  );
+  let rows: UnknownRecord[];
+  try {
+    rows = (await directus.request(
+      ri('courses', {
+        filter: { slug: { _eq: slug } },
+        limit: 1,
+        fields: [...courseDetailFields],
+      }),
+    )) as UnknownRecord[];
+  } catch {
+    rows = (await directus.request(
+      ri('courses', {
+        filter: { slug: { _eq: slug } },
+        limit: 1,
+        fields: [...publicCourseDetailFields],
+      }),
+    )) as UnknownRecord[];
+  }
   return (rows as UnknownRecord[])[0] ?? null;
 }
 
