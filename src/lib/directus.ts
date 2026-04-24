@@ -1,4 +1,4 @@
-import { createDirectus, rest } from '@directus/sdk';
+import { authentication, createDirectus, rest } from '@directus/sdk';
 
 const envRaw = ((import.meta.env.VITE_DIRECTUS_URL as string | undefined) ?? '').trim().replace(/\/$/, '');
 
@@ -22,13 +22,25 @@ export function getDirectusUrl(): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _client: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _publicClient: any;
 
 function getClient() {
   if (!_client) {
     const base = getDirectusUrl() || 'https://example.invalid';
-    _client = createDirectus(base).with(rest({ credentials: 'include' as RequestCredentials }));
+    _client = createDirectus(base)
+      .with(authentication('cookie', { credentials: 'include' as RequestCredentials }))
+      .with(rest({ credentials: 'include' as RequestCredentials }));
   }
   return _client;
+}
+
+function getPublicClient() {
+  if (!_publicClient) {
+    const base = getDirectusUrl() || 'https://example.invalid';
+    _publicClient = createDirectus(base).with(rest({ credentials: 'omit' as RequestCredentials }));
+  }
+  return _publicClient;
 }
 
 /** Lazy init for path-based URL; typed as `any` so callers work without a generated schema. */
@@ -38,6 +50,19 @@ export const directus: any = new Proxy(
   {
     get(_, prop) {
       const c = getClient();
+      const v = Reflect.get(c, prop, c);
+      return typeof v === 'function' ? (v as (...args: unknown[]) => unknown).bind(c) : v;
+    },
+  },
+);
+
+/** Anonymous client for public catalog pages, even when the browser has an auth cookie. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const publicDirectus: any = new Proxy(
+  {},
+  {
+    get(_, prop) {
+      const c = getPublicClient();
       const v = Reflect.get(c, prop, c);
       return typeof v === 'function' ? (v as (...args: unknown[]) => unknown).bind(c) : v;
     },

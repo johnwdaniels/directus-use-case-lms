@@ -78,6 +78,8 @@ export type QuizRef = {
   time_limit_minutes?: number | null;
   max_attempts?: number | null;
   passing_score?: number | null;
+  show_correct_answers?: string | null;
+  show_results_immediately?: boolean | null;
 };
 
 export type AssignmentRef = {
@@ -87,6 +89,9 @@ export type AssignmentRef = {
   instructions?: string | null;
   due_date?: string | null;
   max_points?: number | string | null;
+  passing_score?: number | string | null;
+  submission_types?: string[] | string | null;
+  rubric?: string | null;
 };
 
 export type Lesson = {

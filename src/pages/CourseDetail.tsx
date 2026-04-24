@@ -102,9 +102,10 @@ export default function CourseDetail() {
   const objectives = raw ? parseLearningObjectives(raw.learning_objectives) : [];
   const prereqs = (raw?.prerequisites as UnknownRecord[] | undefined)?.map((p) => p.courses_id).filter(Boolean) as UnknownRecord[];
   const tags = raw ? collectTags(raw) : [];
-  const co = (raw?.co_instructors as UnknownRecord[] | undefined)
-    ?.map((j) => j.directus_users_id as UnknownRecord | undefined)
-    .filter(Boolean) as UnknownRecord[];
+  const co =
+    (raw?.co_instructors as UnknownRecord[] | undefined)
+      ?.map((j) => j.directus_users_id as UnknownRecord | undefined)
+      .filter((u): u is UnknownRecord => Boolean(u)) ?? [];
 
   const progressPct = Number((enrollment.data as UnknownRecord | undefined)?.progress_pct ?? 0);
   const isEnrolled = Boolean(enrollment.data);
@@ -456,7 +457,7 @@ export default function CourseDetail() {
                 {enrollMut.isPending ? 'Enrolling…' : 'Enroll now'}
               </button>
             )}
-            {enrollMut.isError ? <p className="text-xs text-rose-600">Enrollment failed. You may already be enrolled.</p> : null}
+            {enrollMut.isError ? <p className="text-xs text-rose-600">Enrollment failed. Please try again.</p> : null}
             <ul className="space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
               <li>{stats.lessons} lessons</li>
               <li>{stats.hours.toFixed(1)} hours of content</li>

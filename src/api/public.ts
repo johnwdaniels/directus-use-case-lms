@@ -1,5 +1,5 @@
 import { aggregate, createItem, readItem, readItems, readMe } from '@directus/sdk';
-import { directus, hasDirectusEnv } from '@/lib/directus';
+import { directus, hasDirectusEnv, publicDirectus } from '@/lib/directus';
 
 export type UnknownRecord = Record<string, unknown>;
 
@@ -63,10 +63,7 @@ export const courseDetailFields = [
   'cover_image',
   'learning_objectives',
   'trailer_video_url',
-  'date_updated',
   'enrollment_count',
-  'default_completion_threshold',
-  'default_video_player_theme',
   'instructor.id',
   'instructor.first_name',
   'instructor.last_name',
@@ -123,12 +120,17 @@ export const courseDetailFields = [
   'modules.lessons.quiz.time_limit_minutes',
   'modules.lessons.quiz.max_attempts',
   'modules.lessons.quiz.passing_score',
+  'modules.lessons.quiz.show_correct_answers',
+  'modules.lessons.quiz.show_results_immediately',
   'modules.lessons.assignment.id',
   'modules.lessons.assignment.title',
   'modules.lessons.assignment.description',
   'modules.lessons.assignment.instructions',
   'modules.lessons.assignment.due_date',
   'modules.lessons.assignment.max_points',
+  'modules.lessons.assignment.passing_score',
+  'modules.lessons.assignment.submission_types',
+  'modules.lessons.assignment.rubric',
 ] as const;
 
 const publicCourseDetailFields = [
@@ -148,10 +150,7 @@ const publicCourseDetailFields = [
   'cover_image',
   'learning_objectives',
   'trailer_video_url',
-  'date_updated',
   'enrollment_count',
-  'default_completion_threshold',
-  'default_video_player_theme',
   'instructor.id',
   'instructor.first_name',
   'instructor.last_name',
@@ -199,7 +198,7 @@ function addVisibleCourseCounts(categories: UnknownRecord[], courses: UnknownRec
 
 export async function fetchFeaturedCourses() {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('courses', {
       sort: ['-average_rating'],
       limit: 12,
@@ -210,7 +209,7 @@ export async function fetchFeaturedCourses() {
 
 export async function fetchNewCourses() {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('courses', {
       sort: ['-published_at'],
       limit: 12,
@@ -221,7 +220,7 @@ export async function fetchNewCourses() {
 
 export async function fetchCoursesByCategoryId(categoryId: string, limit = 12) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('courses', {
       filter: { category: { _eq: categoryId } },
       sort: ['-average_rating'],
@@ -234,7 +233,7 @@ export async function fetchCoursesByCategoryId(categoryId: string, limit = 12) {
 export async function fetchCoursesByCategoryIds(categoryIds: string[], limit = -1) {
   assertUrl();
   if (!categoryIds.length) return [] as UnknownRecord[];
-  return directus.request(
+  return publicDirectus.request(
     ri('courses', {
       filter: { category: { _in: categoryIds } },
       sort: ['-average_rating'],
@@ -246,7 +245,7 @@ export async function fetchCoursesByCategoryIds(categoryIds: string[], limit = -
 
 export async function fetchRootCategories() {
   assertUrl();
-  const categories = (await directus.request(
+  const categories = (await publicDirectus.request(
     ri('categories', {
       sort: ['sort_order', 'name'],
       limit: -1,
@@ -256,7 +255,7 @@ export async function fetchRootCategories() {
   const roots = categories.filter((c) => parentId(c.parent) == null);
 
   try {
-    const courses = (await directus.request(
+    const courses = (await publicDirectus.request(
       ri('courses', {
         limit: -1,
         fields: ['id', 'category.id'],
@@ -272,7 +271,7 @@ export async function fetchRootCategories() {
 
 export async function fetchAllCategories() {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('categories', {
       sort: ['sort_order', 'name'],
       limit: -1,
@@ -283,7 +282,7 @@ export async function fetchAllCategories() {
 
 export async function fetchCategoryBySlug(slug: string) {
   assertUrl();
-  const rows = await directus.request(
+  const rows = await publicDirectus.request(
     ri('categories', {
       filter: { slug: { _eq: slug } },
       limit: 1,
@@ -295,7 +294,7 @@ export async function fetchCategoryBySlug(slug: string) {
 
 export async function fetchFeaturedInstructors(limit = 6) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('directus_users', {
       filter: { is_instructor: { _eq: true } },
       sort: ['-total_students'],
@@ -321,7 +320,7 @@ export async function fetchFeaturedInstructors(limit = 6) {
 
 export async function fetchInstructorsPage(limit = 48) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('directus_users', {
       filter: { is_instructor: { _eq: true } },
       sort: ['-total_students'],
@@ -342,7 +341,7 @@ export async function fetchInstructorsPage(limit = 48) {
 
 export async function fetchInstructorById(id: string) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     rone('directus_users', id, {
       fields: [
         'id',
@@ -365,7 +364,7 @@ export async function fetchInstructorById(id: string) {
 
 export async function fetchCoursesByInstructor(instructorId: string) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('courses', {
       filter: { instructor: { _eq: instructorId } },
       sort: ['-published_at'],
@@ -377,7 +376,7 @@ export async function fetchCoursesByInstructor(instructorId: string) {
 
 export async function fetchTestimonialReviews() {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('reviews', {
       filter: { _and: [{ rating: { _eq: 5 } }, { is_approved: { _eq: true } }] },
       sort: ['-date_created'],
@@ -397,11 +396,12 @@ export async function fetchTestimonialReviews() {
   ) as Promise<UnknownRecord[]>;
 }
 
-export async function fetchCourseBySlug(slug: string) {
+export async function fetchCourseBySlug(slug: string, options?: { authenticated?: boolean }) {
   assertUrl();
+  const client = options?.authenticated ? directus : publicDirectus;
   let rows: UnknownRecord[];
   try {
-    rows = (await directus.request(
+    rows = (await client.request(
       ri('courses', {
         filter: { slug: { _eq: slug } },
         limit: 1,
@@ -409,7 +409,7 @@ export async function fetchCourseBySlug(slug: string) {
       }),
     )) as UnknownRecord[];
   } catch {
-    rows = (await directus.request(
+    rows = (await client.request(
       ri('courses', {
         filter: { slug: { _eq: slug } },
         limit: 1,
@@ -510,7 +510,7 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
   let total: number;
   try {
     const pair = await Promise.all([
-      directus.request(
+      publicDirectus.request(
         ri('courses', {
           ...(filter ? { filter } : {}),
           sort: catalogSortFields(filters.sort),
@@ -520,7 +520,7 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
           fields: [...courseCardFields],
         }),
       ),
-      directus.request(
+      publicDirectus.request(
         aggQuery('courses', {
           aggregate: { count: '*' },
           query: { ...(filter ? { filter } : {}), ...(search ? { search } : {}) },
@@ -536,7 +536,7 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
     const retryParts = parts.filter((p) => !('has_certificate' in (p as object)));
     const retryFilter = retryParts.length ? { _and: retryParts } : undefined;
     const pair = await Promise.all([
-      directus.request(
+      publicDirectus.request(
         ri('courses', {
           ...(retryFilter ? { filter: retryFilter } : {}),
           sort: catalogSortFields(filters.sort),
@@ -546,7 +546,7 @@ export async function fetchCoursesCatalog(filters: CatalogFilters) {
           fields: [...courseCardFields],
         }),
       ),
-      directus.request(
+      publicDirectus.request(
         aggQuery('courses', {
           aggregate: { count: '*' },
           query: { ...(retryFilter ? { filter: retryFilter } : {}), ...(search ? { search } : {}) },
@@ -568,7 +568,7 @@ export async function fetchReviewsForCourse(courseId: string, page: number, perP
   const offset = (page - 1) * perPage;
   const filter = { _and: [{ course: { _eq: courseId } }, { is_approved: { _eq: true } }] };
   const [rows, agg] = await Promise.all([
-    directus.request(
+    publicDirectus.request(
       ri('reviews', {
         filter,
         sort: ['-date_created'],
@@ -577,7 +577,7 @@ export async function fetchReviewsForCourse(courseId: string, page: number, perP
         fields: ['id', 'rating', 'title', 'body', 'date_created', 'user.first_name', 'user.last_name'],
       }),
     ),
-    directus.request(
+    publicDirectus.request(
       aggQuery('reviews', {
         aggregate: { count: '*' },
         query: { filter },
@@ -592,7 +592,7 @@ export async function fetchReviewsForCourse(courseId: string, page: number, perP
 export async function fetchRatingHistogram(courseId: string) {
   assertUrl();
   try {
-    const rows = await directus.request(
+    const rows = await publicDirectus.request(
       aggQuery('reviews', {
         aggregate: { count: '*' },
         groupBy: ['rating'],
@@ -610,7 +610,7 @@ export async function fetchRatingHistogram(courseId: string) {
     }
     return map;
   } catch {
-    const rows = await directus.request(
+    const rows = await publicDirectus.request(
       ri('reviews', {
         filter: { _and: [{ course: { _eq: courseId } }, { is_approved: { _eq: true } }] },
         limit: -1,
@@ -650,7 +650,7 @@ export async function createEnrollmentForCourse(courseId: string) {
 
 export async function fetchCertificateByCode(code: string) {
   assertUrl();
-  const rows = await directus.request(
+  const rows = await publicDirectus.request(
     ri('certificates', {
       filter: { verification_code: { _eq: code } },
       limit: 1,
@@ -673,7 +673,7 @@ export async function fetchCertificateByCode(code: string) {
 
 export async function globalSearchCourses(q: string) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('courses', {
       search: q,
       limit: 3,
@@ -684,7 +684,7 @@ export async function globalSearchCourses(q: string) {
 
 export async function globalSearchCategories(q: string) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('categories', {
       search: q,
       limit: 3,
@@ -695,7 +695,7 @@ export async function globalSearchCategories(q: string) {
 
 export async function globalSearchInstructors(q: string) {
   assertUrl();
-  return directus.request(
+  return publicDirectus.request(
     ri('directus_users', {
       filter: { is_instructor: { _eq: true } },
       search: q,

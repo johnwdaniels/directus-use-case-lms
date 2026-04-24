@@ -18,11 +18,19 @@ export function useCurrentUser() {
     retry: false,
     queryFn: async () => {
       try {
-        const me = await directus.request(
-          readMe({
-            fields: ['id', 'email', 'first_name', 'last_name'],
-          }),
-        );
+        const read = () =>
+          directus.request(
+            readMe({
+              fields: ['id', 'email', 'first_name', 'last_name'],
+            }),
+          );
+        let me;
+        try {
+          me = await read();
+        } catch {
+          await directus.refresh();
+          me = await read();
+        }
         return me as CurrentUser;
       } catch {
         return null;

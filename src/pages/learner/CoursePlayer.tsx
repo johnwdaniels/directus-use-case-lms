@@ -10,6 +10,7 @@ import {
   fetchEnrollmentByCourseSlug,
   fetchLessonProgressForEnrollment,
   fetchLessonResources,
+  fetchQuizAttemptsForUser,
 } from '@/api/learner';
 import type { UnknownRecord } from '@/api/public';
 import { directusAssetUrl } from '@/lib/assets';
@@ -181,6 +182,7 @@ export default function CoursePlayer() {
     () => lessons.find((l) => l.id === activeLessonId) ?? null,
     [lessons, activeLessonId],
   );
+  const activeQuiz = activeLesson ? resolveQuiz(activeLesson) : null;
 
   useEffect(() => {
     currentLessonIdRef.current = activeLesson?.id ?? null;
@@ -222,6 +224,12 @@ export default function CoursePlayer() {
     queryKey: ['lesson-resources', activeLesson?.id],
     enabled: Boolean(activeLesson?.id && rightTab === 'resources'),
     queryFn: () => fetchLessonResources(activeLesson!.id),
+  });
+
+  const quizAttemptsQ = useQuery({
+    queryKey: ['quiz-attempts', activeQuiz?.id, user?.id],
+    enabled: Boolean(activeQuiz?.id && user?.id),
+    queryFn: () => fetchQuizAttemptsForUser(user!.id, activeQuiz!.id),
   });
 
   const seekToSeconds = useCallback((sec: number) => {
@@ -437,9 +445,14 @@ export default function CoursePlayer() {
               )}
 
               {activeLesson.lesson_type === 'quiz' && (() => {
-                const qz = resolveQuiz(activeLesson);
+                const qz = activeQuiz;
                 if (!qz)
                   return <p className="text-sm text-amber-800">This quiz lesson is not linked to a quiz yet.</p>;
+                const attempts = quizAttemptsQ.data ?? [];
+                const maxAttempts = qz.max_attempts == null ? null : Number(qz.max_attempts);
+                const attemptsUsed = attempts.length;
+                const maxReached = maxAttempts != null && Number.isFinite(maxAttempts) && attemptsUsed >= maxAttempts;
+                const inProgress = attempts.find((a) => a.status === 'in_progress');
                 return (
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 className="text-lg font-semibold text-slate-900">{qz.title ?? 'Quiz'}</h2>
@@ -453,14 +466,30 @@ export default function CoursePlayer() {
                       <li>Max attempts: {qz.max_attempts != null ? qz.max_attempts : 'Unlimited'}</li>
                       <li>Passing score: {qz.passing_score ?? 70}%</li>
                     </ul>
-                    <button
-                      type="button"
-                      disabled={quizStartMut.isPending || !enrollmentId}
-                      onClick={() => quizStartMut.mutate(qz.id)}
-                      className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-                    >
-                      Start quiz
-                    </button>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      {inProgress?.id ? (
+                        <Link
+                          to={`/quiz/${encodeURIComponent(String(inProgress.id))}`}
+                          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                        >
+                          Resume quiz
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={quizStartMut.isPending || !enrollmentId || maxReached}
+                          onClick={() => quizStartMut.mutate(qz.id)}
+                          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                          Start quiz
+                        </button>
+                      )}
+                    </div>
+                    {maxReached && !inProgress ? (
+                      <p className="mt-3 text-sm text-amber-800">
+                        You have used all {maxAttempts} allowed attempt{maxAttempts === 1 ? '' : 's'} for this quiz.
+                      </p>
+                    ) : null}
                   </div>
                 );
               })()}

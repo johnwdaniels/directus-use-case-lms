@@ -12,12 +12,17 @@ import CategoryDetail from '@/pages/CategoryDetail';
 import InstructorsList from '@/pages/InstructorsList';
 import InstructorProfile from '@/pages/InstructorProfile';
 import VerifyCertificate from '@/pages/VerifyCertificate';
+import Login from '@/pages/Login';
 import MyLearning from '@/pages/learner/MyLearning';
 import MyCompleted from '@/pages/learner/MyCompleted';
 import MyCertificates from '@/pages/learner/MyCertificates';
 import MyBadges from '@/pages/learner/MyBadges';
 import MyProfile from '@/pages/learner/MyProfile';
 import CoursePlayer from '@/pages/learner/CoursePlayer';
+import QuizRunner from '@/pages/learner/QuizRunner';
+import QuizResult from '@/pages/learner/QuizResult';
+import AssignmentSubmission from '@/pages/learner/AssignmentSubmission';
+import AssignmentList from '@/pages/learner/AssignmentList';
 
 function NotFound() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -39,6 +44,8 @@ function NotFound() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/quiz/:attemptId" element={<QuizRunner />} />
+      <Route path="/quiz/:attemptId/results" element={<QuizResult />} />
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/courses" element={<CoursesList />} />
@@ -56,25 +63,9 @@ export default function App() {
         <Route path="/my/certificates" element={<MyCertificates />} />
         <Route path="/my/badges" element={<MyBadges />} />
         <Route path="/my/profile" element={<MyProfile />} />
-        <Route
-          path="/quiz/:attemptId"
-          element={<PlaceholderPage title="Quiz attempt" description="Quiz taking UI is wired in a later step. Return to your course to continue." />}
-        />
-        <Route
-          path="/assignment/:assignmentId"
-          element={
-            <PlaceholderPage title="Assignment" description="Assignment submission UI is wired in a later step. Return to your course to continue." />
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <PlaceholderPage
-              title="Log in"
-              description="Authentication (Directus cookie session, Zustand shell, forms) is wired in the auth phase. Use this header link as the future entry point."
-            />
-          }
-        />
+        <Route path="/my/assignments" element={<AssignmentList />} />
+        <Route path="/assignment/:assignmentId" element={<AssignmentSubmission />} />
+        <Route path="/login" element={<Login />} />
         <Route
           path="/signup"
           element={

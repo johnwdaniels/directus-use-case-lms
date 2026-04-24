@@ -7,8 +7,10 @@ import App from './App';
 import './index.css';
 
 /** Match Vite `base` when the app is served under a subpath (e.g. `base: '/LMS/'`). */
-const routerBasename =
-  import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL.replace(/\/$/, '');
+const viteBasename = import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL.replace(/\/$/, '');
+const pathBasename =
+  typeof window !== 'undefined' && /^\/LMS(?:\/|$)/.test(window.location.pathname) ? '/LMS' : undefined;
+const routerBasename = viteBasename ?? pathBasename;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
