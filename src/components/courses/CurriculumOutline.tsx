@@ -16,22 +16,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  Check,
-  ChevronDown,
-  CirclePlay,
-  Edit3,
-  ExternalLink,
-  File,
-  FileText,
-  GripVertical,
-  HelpCircle,
-  Lock,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Check, ChevronDown, GripVertical, Lock, Plus, Trash2 } from 'lucide-react';
 import { formatDurationMinutes } from '@/lib/format';
-import type { CourseModule, CourseWithCurriculum, Lesson, LessonProgressStatus, LessonType } from '@/types/lms';
+import { LessonIcon } from '@/components/courses/LessonIcon';
+import type { CourseModule, CourseWithCurriculum, Lesson, LessonProgressStatus } from '@/types/lms';
 
 export type CurriculumOutlineVariant = 'preview' | 'player' | 'instructor-editor';
 
@@ -51,25 +39,6 @@ export type CurriculumOutlineProps = {
   onAddModule?: () => void;
   onReorderLessons?: (moduleId: string, orderedLessonIds: string[]) => void;
 };
-
-function lessonTypeIcon(type: LessonType) {
-  switch (type) {
-    case 'video':
-      return CirclePlay;
-    case 'text':
-      return FileText;
-    case 'pdf':
-      return File;
-    case 'quiz':
-      return HelpCircle;
-    case 'assignment':
-      return Edit3;
-    case 'external_link':
-      return ExternalLink;
-    default:
-      return FileText;
-  }
-}
 
 function moduleDurationMinutes(module: CourseModule): number {
   const lessons = module.lessons ?? [];
@@ -116,8 +85,6 @@ function SortableInstructorLessonRow(props: {
     transition,
   };
 
-  const Icon = lessonTypeIcon(lesson.lesson_type);
-
   return (
     <div
       ref={setNodeRef}
@@ -135,7 +102,7 @@ function SortableInstructorLessonRow(props: {
       >
         <GripVertical className="h-4 w-4" />
       </button>
-      <Icon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+      <LessonIcon lessonType={lesson.lesson_type} />
       <input
         className="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-sm"
         defaultValue={lesson.title}
@@ -311,7 +278,6 @@ export function CurriculumOutline({
           ) : (
             <ul className="mt-2 space-y-1 px-1 pb-2">
               {lessons.map((lesson) => {
-                const Icon = lessonTypeIcon(lesson.lesson_type);
                 const status = progress?.[lesson.id];
                 const locked = variant === 'preview' && isLessonLockedPreview(lesson, isEnrolled);
                 const clickable =
@@ -333,7 +299,7 @@ export function CurriculumOutline({
                       } ${!clickable ? 'cursor-not-allowed opacity-60' : ''}`}
                     >
                       {active ? <span className="w-1 self-stretch rounded-full bg-indigo-600" aria-hidden /> : null}
-                      <Icon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                      <LessonIcon lessonType={lesson.lesson_type} />
                       <span className="min-w-0 flex-1 truncate font-medium text-slate-900">{lesson.title}</span>
                       <span className="shrink-0 text-xs text-slate-500">{lessonDurationLabel(lesson)}</span>
                       {status === 'completed' ? (
