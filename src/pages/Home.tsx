@@ -97,7 +97,7 @@ export default function Home() {
           <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-violet-600 blur-3xl" />
         </div>
         <div className="relative mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Learn without limits</h1>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Learn without limits on LMS today</h1>
           <p className="mt-4 text-lg text-indigo-100/90">
             Self-paced courses from expert instructors—browse the catalog, preview lessons on free courses, and start
             in minutes.
