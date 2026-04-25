@@ -18,6 +18,8 @@ const navItems = [
   { to: '/categories', label: 'Categories' },
   { to: '/instructors', label: 'Instructors' },
   { to: '/my/learning', label: 'My learning' },
+  { to: '/my/certificates', label: 'Certificates' },
+  { to: '/my/badges', label: 'Badges' },
 ] as const;
 
 export function SiteHeader() {
