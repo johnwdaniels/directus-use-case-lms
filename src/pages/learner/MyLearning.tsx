@@ -9,6 +9,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { CourseCard } from '@/components/courses/CourseCard';
 import { EmptyState } from '@/components/ui-custom/EmptyState';
 import type { UnknownRecord } from '@/api/public';
+import type { CurrentUser } from '@/hooks/useCurrentUser';
 
 const tabs: { id: EnrollmentTab; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -16,6 +17,12 @@ const tabs: { id: EnrollmentTab; label: string }[] = [
   { id: 'completed', label: 'Completed' },
   { id: 'dropped', label: 'Dropped' },
 ];
+
+function directusRoleName(user: CurrentUser | null | undefined): string | undefined {
+  const r = user?.role;
+  if (r && typeof r === 'object' && 'name' in r) return (r.name as string | null | undefined) ?? undefined;
+  return undefined;
+}
 
 export default function MyLearning() {
   const { data: user } = useCurrentUser();
@@ -54,6 +61,19 @@ export default function MyLearning() {
     () => gridRows.map(mapEnrollmentCourse).filter((c): c is NonNullable<typeof c> => Boolean(c)),
     [gridRows],
   );
+
+  const queriesOk = !listQ.isError && !continueQ.isError;
+  const rawEnrollmentCount = (listQ.data ?? []).length;
+  const visibleCourseCount =
+    tab === 'all'
+      ? continueCourses.length + gridCourses.length
+      : (listQ.data ?? []).map(mapEnrollmentCourse).filter(Boolean).length;
+  const enrollmentsMissingCourses =
+    listQ.isSuccess && rawEnrollmentCount > 0 && visibleCourseCount === 0 && queriesOk;
+
+  const roleName = directusRoleName(user);
+  const instructorEmptyHint =
+    roleName?.toLowerCase() === 'instructor' && listQ.isSuccess && rawEnrollmentCount === 0 && queriesOk;
 
   if (!hasDirectusEnv()) {
     return (
@@ -121,12 +141,25 @@ export default function MyLearning() {
         ))}
       </div>
 
+      {enrollmentsMissingCourses ? (
+        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <p className="font-semibold">Enrollments loaded, but courses are hidden</p>
+          <p className="mt-1 text-amber-900">
+            Directus returned enrollment rows without readable <code className="rounded bg-amber-100 px-1">course</code> data. Grant the signed-in role read access to published courses (and nested fields this page requests) for enrollments the user may see.
+          </p>
+        </div>
+      ) : null}
+
       {empty ? (
         <div className="mt-10">
           <EmptyState
             icon={BookOpen}
-            title="Nothing here yet"
-            description="You have not enrolled in anything yet. Browse the catalog."
+            title={instructorEmptyHint ? 'No learner enrollments on this account' : 'Nothing here yet'}
+            description={
+              instructorEmptyHint
+                ? 'You are signed in with the Instructor role. Seed data attaches enrollments to learner accounts (for example claire.dubois@example.com), not to instructors. Log out and sign in as a learner to see My learning, or enroll from the catalog.'
+                : 'You have not enrolled in anything yet. Browse the catalog.'
+            }
             primaryLabel="Browse the catalog"
             onPrimary={() => {
               window.location.href = '/courses';

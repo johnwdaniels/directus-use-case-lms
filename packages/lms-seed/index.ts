@@ -1044,11 +1044,14 @@ async function seedEnrollments(
 ): Promise<{ enrollMap: Map<string, string>; completedEnrolls: string[] }> {
   console.log("\n📋  Seeding enrollments…");
 
+  // Learners plus demo instructors so “My learning” is populated for instructor logins after seed.
   const learnerEmails = [
     "priya.sharma@example.com","tom.baker@example.com","ana.souza@example.com",
     "kenji.tanaka@example.com","claire.dubois@example.com","mohammed.hassan@example.com",
     "sofia.martinez@example.com","david.lee@example.com","ingrid.larsson@example.com",
     "jamal.williams@example.com","mei.wang@example.com","lucas.oliveira@example.com",
+    "sarah.chen@example.com","marcus.thompson@example.com","emma.rodriguez@example.com",
+    "james.wilson@example.com","olivia.park@example.com","alex.kim@example.com",
   ];
 
   const publishedCourses = coursePlan
