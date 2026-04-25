@@ -80,6 +80,7 @@ export default function MyLearning() {
   }
 
   const empty = listQ.isSuccess && (listQ.data ?? []).length === 0;
+  const loadError = listQ.isError || continueQ.isError;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -92,6 +93,18 @@ export default function MyLearning() {
           Browse catalog
         </Link>
       </div>
+
+      {loadError ? (
+        <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+          <p className="font-semibold">Could not load enrollments</p>
+          <p className="mt-1 text-rose-800">
+            The request to Directus failed (permissions, CORS, or network). Confirm the Learner role can read its own{' '}
+            <code className="rounded bg-rose-100 px-1">enrollments</code> rows and nested <code className="rounded bg-rose-100 px-1">course</code>{' '}
+            fields. If you are checking enrollments for someone else in Directus Studio, sign in as that same user here — this page only lists
+            enrollments for the currently signed-in account.
+          </p>
+        </div>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         {tabs.map((t) => (

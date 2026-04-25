@@ -638,10 +638,11 @@ export async function fetchEnrollment(courseId: string, userId: string) {
   return (rows as UnknownRecord[])[0] ?? null;
 }
 
-export async function createEnrollmentForCourse(courseId: string) {
+export async function createEnrollmentForCourse(courseId: string, userId: string) {
   assertUrl();
   return directus.request(
     ci('enrollments', {
+      user: userId,
       course: courseId,
       status: 'active',
     }),

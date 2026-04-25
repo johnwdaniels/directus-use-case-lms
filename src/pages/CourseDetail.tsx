@@ -63,9 +63,9 @@ export default function CourseDetail() {
   const [reviewBody, setReviewBody] = useState('');
 
   const courseQuery = useQuery({
-    queryKey: ['course', slug],
+    queryKey: ['course', slug, user?.id ?? 'anon'],
     enabled: Boolean(slug),
-    queryFn: () => fetchCourseBySlug(slug!),
+    queryFn: () => fetchCourseBySlug(slug!, { authenticated: Boolean(user?.id) }),
   });
 
   const raw = courseQuery.data as UnknownRecord | null | undefined;
@@ -79,9 +79,11 @@ export default function CourseDetail() {
   });
 
   const enrollMut = useMutation({
-    mutationFn: () => createEnrollmentForCourse(course!.id),
+    mutationFn: () => createEnrollmentForCourse(course!.id, user!.id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['enrollment', slug] });
+      void qc.invalidateQueries({ queryKey: ['enrollment', slug] });
+      void qc.invalidateQueries({ queryKey: ['course', slug] });
+      void qc.invalidateQueries({ queryKey: ['enrollments'] });
       navigate(`/learn/${course!.slug}`);
     },
   });
