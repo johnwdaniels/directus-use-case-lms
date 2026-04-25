@@ -650,24 +650,46 @@ export async function createEnrollmentForCourse(courseId: string) {
 
 export async function fetchCertificateByCode(code: string) {
   assertUrl();
-  const rows = await publicDirectus.request(
-    ri('certificates', {
-      filter: { verification_code: { _eq: code } },
-      limit: 1,
-      fields: [
-        'id',
-        'certificate_number',
-        'verification_code',
-        'issued_at',
-        'final_grade',
-        'user.first_name',
-        'user.last_name',
-        'course.title',
-        'course.instructor.first_name',
-        'course.instructor.last_name',
-      ],
-    }),
-  );
+  const baseFields = [
+    'id',
+    'certificate_number',
+    'verification_code',
+    'issued_at',
+    'final_grade',
+    'user.first_name',
+    'user.last_name',
+    'course.title',
+    'course.instructor.first_name',
+    'course.instructor.last_name',
+  ] as const;
+  let rows: UnknownRecord[];
+  try {
+    rows = (await publicDirectus.request(
+      ri('certificates', {
+        filter: { verification_code: { _eq: code } },
+        limit: 1,
+        fields: [
+          ...baseFields,
+          'template.id',
+          'template.name',
+          'template.html_template',
+          'template.background_image',
+          'template.accent_color',
+          'template.issuer_name',
+          'template.issuer_title',
+          'template.signature_image',
+        ],
+      }),
+    )) as UnknownRecord[];
+  } catch {
+    rows = (await publicDirectus.request(
+      ri('certificates', {
+        filter: { verification_code: { _eq: code } },
+        limit: 1,
+        fields: [...baseFields],
+      }),
+    )) as UnknownRecord[];
+  }
   return (rows as UnknownRecord[])[0] ?? null;
 }
 

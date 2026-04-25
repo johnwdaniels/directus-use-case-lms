@@ -16,6 +16,7 @@ import Login from '@/pages/Login';
 import MyLearning from '@/pages/learner/MyLearning';
 import MyCompleted from '@/pages/learner/MyCompleted';
 import MyCertificates from '@/pages/learner/MyCertificates';
+import CertificateView from '@/pages/learner/CertificateView';
 import MyBadges from '@/pages/learner/MyBadges';
 import MyProfile from '@/pages/learner/MyProfile';
 import CoursePlayer from '@/pages/learner/CoursePlayer';
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="/my/learning" element={<MyLearning />} />
         <Route path="/my/completed" element={<MyCompleted />} />
         <Route path="/my/certificates" element={<MyCertificates />} />
+        <Route path="/my/certificates/:id" element={<CertificateView />} />
         <Route path="/my/badges" element={<MyBadges />} />
         <Route path="/my/profile" element={<MyProfile />} />
         <Route path="/my/assignments" element={<AssignmentList />} />

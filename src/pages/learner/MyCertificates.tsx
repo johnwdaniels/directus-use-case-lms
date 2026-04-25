@@ -1,22 +1,16 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ScrollText } from 'lucide-react';
 import { fetchMyCertificates } from '@/api/learner';
 import { hasDirectusEnv } from '@/lib/directus';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { CertificateViewer } from '@/components/certificates/CertificateViewer';
+import { CertificateRenderer } from '@/components/certificates/CertificateRenderer';
 import { EmptyState } from '@/components/ui-custom/EmptyState';
 import type { UnknownRecord } from '@/api/public';
 
-function thumbnailSrcDoc(html: string): string {
-  const safe = html.slice(0, 8000);
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>html,body{margin:0;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;transform:scale(0.35);transform-origin:center;width:285%;height:285%;}</style></head><body>${safe}</body></html>`;
-}
-
 export default function MyCertificates() {
   const { data: user } = useCurrentUser();
-  const [active, setActive] = useState<UnknownRecord | null>(null);
   const enabled = hasDirectusEnv() && Boolean(user?.id);
 
   const q = useQuery({
@@ -24,9 +18,6 @@ export default function MyCertificates() {
     enabled,
     queryFn: () => fetchMyCertificates(user!.id),
   });
-
-  const learnerName =
-    `${String(user?.first_name ?? '').trim()} ${String(user?.last_name ?? '').trim()}`.trim() || 'Learner';
 
   if (!hasDirectusEnv()) {
     return (
@@ -76,43 +67,28 @@ export default function MyCertificates() {
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => {
-            const tpl = row.template as UnknownRecord | undefined;
-            const html = String(tpl?.html_template ?? '<p style="padding:16px">Certificate</p>');
             const course = row.course as UnknownRecord | undefined;
             const issued = row.issued_at ? format(new Date(String(row.issued_at)), 'PP') : '—';
             return (
               <li key={String(row.id)}>
-                <button
-                  type="button"
-                  onClick={() => setActive(row)}
+                <Link
+                  to={`/my/certificates/${encodeURIComponent(String(row.id))}`}
                   className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                 >
-                  <div className="relative h-40 bg-slate-100">
-                    <iframe
-                      title=""
-                      className="pointer-events-none absolute inset-0 h-full w-full border-0"
-                      sandbox=""
-                      srcDoc={thumbnailSrcDoc(html)}
-                    />
+                  <div className="bg-slate-100 p-2">
+                    <CertificateRenderer certificate={row} compact />
                   </div>
                   <div className="space-y-1 p-4">
                     <h2 className="line-clamp-2 font-semibold text-slate-900">{String(course?.title ?? 'Course')}</h2>
                     <p className="text-xs text-slate-600">Issued {issued}</p>
                     <p className="font-mono text-xs text-slate-500">{String(row.certificate_number ?? '')}</p>
                   </div>
-                </button>
+                </Link>
               </li>
             );
           })}
         </ul>
       )}
-
-      <CertificateViewer
-        open={Boolean(active)}
-        onClose={() => setActive(null)}
-        certificate={active}
-        learnerName={learnerName}
-      />
     </div>
   );
 }

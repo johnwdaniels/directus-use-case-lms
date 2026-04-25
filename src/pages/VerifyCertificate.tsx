@@ -1,10 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { CheckCircle2 } from 'lucide-react';
 import { fetchCertificateByCode } from '@/api/public';
 import { hasDirectusEnv } from '@/lib/directus';
-import { instructorName } from '@/lib/map-entities';
+import { CertificateRenderer } from '@/components/certificates/CertificateRenderer';
 import type { UnknownRecord } from '@/api/public';
 
 export default function VerifyCertificate() {
@@ -18,15 +17,6 @@ export default function VerifyCertificate() {
   });
 
   const row = q.data as UnknownRecord | null | undefined;
-
-  const learner =
-    row?.user && typeof row.user === 'object'
-      ? `${String((row.user as UnknownRecord).first_name ?? '')} ${String((row.user as UnknownRecord).last_name ?? '')}`.trim()
-      : '';
-  const courseTitle =
-    row?.course && typeof row.course === 'object' ? String((row.course as UnknownRecord).title ?? '') : '';
-  const courseIns = row?.course && typeof row.course === 'object' ? ((row.course as UnknownRecord).instructor as UnknownRecord | undefined) : undefined;
-  const instructorNm = courseIns ? instructorName(courseIns) : '';
 
   if (!hasUrl) {
     return (
@@ -46,43 +36,16 @@ export default function VerifyCertificate() {
   }
 
   if (row) {
-    const issued = row.issued_at ? format(new Date(String(row.issued_at)), 'PPP') : '—';
     return (
-      <div className="mx-auto max-w-lg px-4 py-16">
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-8 text-center shadow-sm">
-          <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-600" aria-hidden />
-          <h1 className="mt-4 text-2xl font-bold text-emerald-950">Certificate verified</h1>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5 text-center shadow-sm">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" aria-hidden />
+          <h1 className="mt-3 text-2xl font-bold text-emerald-950">Certificate verified</h1>
           <p className="mt-1 text-sm text-emerald-900/80">This credential was issued by the platform.</p>
-          <dl className="mt-8 space-y-3 text-left text-sm">
-            <div className="flex justify-between gap-4 border-b border-emerald-100 pb-2">
-              <dt className="text-emerald-800/80">Certificate #</dt>
-              <dd className="font-mono font-medium text-emerald-950">{String(row.certificate_number ?? row.id ?? '')}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-emerald-100 pb-2">
-              <dt className="text-emerald-800/80">Learner</dt>
-              <dd className="font-medium text-emerald-950">{learner || '—'}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-emerald-100 pb-2">
-              <dt className="text-emerald-800/80">Course</dt>
-              <dd className="text-right font-medium text-emerald-950">{courseTitle || '—'}</dd>
-            </div>
-            {instructorNm ? (
-              <div className="flex justify-between gap-4 border-b border-emerald-100 pb-2">
-                <dt className="text-emerald-800/80">Instructor</dt>
-                <dd className="font-medium text-emerald-950">{instructorNm}</dd>
-              </div>
-            ) : null}
-            <div className="flex justify-between gap-4 border-b border-emerald-100 pb-2">
-              <dt className="text-emerald-800/80">Issued</dt>
-              <dd className="font-medium text-emerald-950">{issued}</dd>
-            </div>
-            {row.final_grade != null && row.final_grade !== '' ? (
-              <div className="flex justify-between gap-4 pt-1">
-                <dt className="text-emerald-800/80">Final grade</dt>
-                <dd className="font-medium text-emerald-950">{String(row.final_grade)}</dd>
-              </div>
-            ) : null}
-          </dl>
+          <p className="mt-2 font-mono text-xs text-emerald-900">{String(row.certificate_number ?? row.id ?? '')}</p>
+        </div>
+        <div className="rounded-2xl bg-slate-100 p-3 shadow-inner sm:p-6">
+          <CertificateRenderer certificate={row} />
         </div>
       </div>
     );

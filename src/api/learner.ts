@@ -183,15 +183,65 @@ export async function fetchMyCertificates(userId: string) {
         'verification_code',
         'issued_at',
         'final_grade',
+        'pdf_file',
+        'user.id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'course.id',
         'course.title',
         'course.slug',
+        'course.instructor.id',
+        'course.instructor.first_name',
+        'course.instructor.last_name',
         'template.id',
         'template.name',
         'template.html_template',
+        'template.background_image',
         'template.accent_color',
+        'template.issuer_name',
+        'template.issuer_title',
+        'template.signature_image',
       ],
     }),
   ) as Promise<UnknownRecord[]>;
+}
+
+export async function fetchMyCertificateById(id: string, userId: string) {
+  assertUrl();
+  const rows = await directus.request(
+    ri('certificates', {
+      filter: { _and: [{ id: { _eq: id } }, { user: { _eq: userId } }] },
+      limit: 1,
+      fields: [
+        'id',
+        'certificate_number',
+        'verification_code',
+        'issued_at',
+        'final_grade',
+        'pdf_file',
+        'user.id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'course.id',
+        'course.title',
+        'course.slug',
+        'course.instructor.id',
+        'course.instructor.first_name',
+        'course.instructor.last_name',
+        'template.id',
+        'template.name',
+        'template.html_template',
+        'template.background_image',
+        'template.accent_color',
+        'template.issuer_name',
+        'template.issuer_title',
+        'template.signature_image',
+      ],
+    }),
+  );
+  return ((rows as UnknownRecord[])[0] ?? null) as UnknownRecord | null;
 }
 
 export async function fetchMyBadges(userId: string) {
@@ -201,7 +251,18 @@ export async function fetchMyBadges(userId: string) {
       filter: { user: { _eq: userId } },
       sort: ['-awarded_at'],
       limit: -1,
-      fields: ['id', 'awarded_at', 'awarded_context', 'badge.id', 'badge.name', 'badge.icon', 'badge.color', 'badge.description'],
+      fields: [
+        'id',
+        'awarded_at',
+        'awarded_context',
+        'badge.id',
+        'badge.name',
+        'badge.icon',
+        'badge.color',
+        'badge.description',
+        'badge.criteria_type',
+        'badge.criteria_value',
+      ],
     }),
   ) as Promise<UnknownRecord[]>;
 }

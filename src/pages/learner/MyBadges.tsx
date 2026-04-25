@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { Medal } from 'lucide-react';
 import { fetchMyBadges } from '@/api/learner';
-import { directusAssetUrl } from '@/lib/assets';
 import { hasDirectusEnv } from '@/lib/directus';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { EmptyState } from '@/components/ui-custom/EmptyState';
+import { BadgeCard } from '@/components/badges/BadgeCard';
 import type { UnknownRecord } from '@/api/public';
 
 export default function MyBadges() {
@@ -66,26 +65,9 @@ export default function MyBadges() {
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => {
-            const b = row.badge as UnknownRecord | undefined;
-            const icon = directusAssetUrl(b?.icon as string | { id: string } | null | undefined);
-            const when = row.awarded_at ? format(new Date(String(row.awarded_at)), 'PP') : '—';
-            const ctx = row.awarded_context != null ? String(row.awarded_context) : '';
             return (
-              <li
-                key={String(row.id)}
-                className="flex gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <div
-                  className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 text-2xl"
-                  style={{ backgroundColor: b?.color ? String(b.color) + '22' : undefined }}
-                >
-                  {icon ? <img src={icon} alt="" className="h-full w-full object-cover" loading="lazy" /> : '🏅'}
-                </div>
-                <div className="min-w-0">
-                  <h2 className="font-semibold text-slate-900">{String(b?.name ?? 'Badge')}</h2>
-                  <p className="text-xs text-slate-500">{when}</p>
-                  {ctx ? <p className="mt-1 text-sm text-slate-600">{ctx}</p> : null}
-                </div>
+              <li key={String(row.id)}>
+                <BadgeCard award={row} />
               </li>
             );
           })}
