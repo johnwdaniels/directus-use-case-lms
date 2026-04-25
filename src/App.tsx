@@ -24,6 +24,13 @@ import QuizRunner from '@/pages/learner/QuizRunner';
 import QuizResult from '@/pages/learner/QuizResult';
 import AssignmentSubmission from '@/pages/learner/AssignmentSubmission';
 import AssignmentList from '@/pages/learner/AssignmentList';
+import InstructorDashboard from '@/pages/instructor/InstructorDashboard';
+import MyCourses from '@/pages/instructor/MyCourses';
+import CourseEditor from '@/pages/instructor/CourseEditor';
+import CourseStudents from '@/pages/instructor/CourseStudents';
+import GradingQueue from '@/pages/instructor/GradingQueue';
+import CourseAnalytics from '@/pages/instructor/CourseAnalytics';
+import QuizEditPage from '@/pages/instructor/QuizEditPage';
 
 function NotFound() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -67,6 +74,13 @@ export default function App() {
         <Route path="/my/profile" element={<MyProfile />} />
         <Route path="/my/assignments" element={<AssignmentList />} />
         <Route path="/assignment/:assignmentId" element={<AssignmentSubmission />} />
+        <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
+        <Route path="/instructor/courses" element={<MyCourses />} />
+        <Route path="/instructor/courses/:id/edit" element={<CourseEditor />} />
+        <Route path="/instructor/courses/:id/quizzes/:quizId/edit" element={<QuizEditPage />} />
+        <Route path="/instructor/courses/:id/students" element={<CourseStudents />} />
+        <Route path="/instructor/courses/:id/grading" element={<GradingQueue />} />
+        <Route path="/instructor/courses/:id/analytics" element={<CourseAnalytics />} />
         <Route path="/login" element={<Login />} />
         <Route
           path="/signup"

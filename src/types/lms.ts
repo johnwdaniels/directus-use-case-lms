@@ -18,6 +18,9 @@ export type Course = {
   id: string;
   title: string;
   slug: string;
+  status?: string | null;
+  visibility?: string | null;
+  published_at?: string | null;
   subtitle?: string | null;
   description?: string | null;
   duration_minutes?: number | null;
@@ -103,6 +106,8 @@ export type Lesson = {
   sort_order?: number | null;
   duration_minutes?: number | null;
   is_preview?: boolean | null;
+  required?: boolean | null;
+  completion_criteria?: string | null;
   /** Video lesson fields */
   video_source?: VideoSource | null;
   video_youtube_id?: string | null;
@@ -116,6 +121,7 @@ export type Lesson = {
   video_transcript?: string | null;
   resume_from_last_position?: boolean | null;
   completion_threshold?: number | null;
+  allow_download?: boolean | null;
   /** Text / PDF / quiz / assignment / external */
   text_body?: string | null;
   pdf_file?: FileRef;
