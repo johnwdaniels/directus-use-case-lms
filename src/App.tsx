@@ -31,6 +31,13 @@ import CourseStudents from '@/pages/instructor/CourseStudents';
 import GradingQueue from '@/pages/instructor/GradingQueue';
 import CourseAnalytics from '@/pages/instructor/CourseAnalytics';
 import QuizEditPage from '@/pages/instructor/QuizEditPage';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import UsersList from '@/pages/admin/UsersList';
+import CategoriesManage from '@/pages/admin/CategoriesManage';
+import BadgesManage from '@/pages/admin/BadgesManage';
+import CertificateTemplates from '@/pages/admin/CertificateTemplates';
+import ReviewsModerate from '@/pages/admin/ReviewsModerate';
+import SiteAnnouncements from '@/pages/admin/SiteAnnouncements';
 
 function NotFound() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -81,6 +88,13 @@ export default function App() {
         <Route path="/instructor/courses/:id/students" element={<CourseStudents />} />
         <Route path="/instructor/courses/:id/grading" element={<GradingQueue />} />
         <Route path="/instructor/courses/:id/analytics" element={<CourseAnalytics />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<UsersList />} />
+        <Route path="/admin/categories" element={<CategoriesManage />} />
+        <Route path="/admin/badges" element={<BadgesManage />} />
+        <Route path="/admin/certificate-templates" element={<CertificateTemplates />} />
+        <Route path="/admin/reviews" element={<ReviewsModerate />} />
+        <Route path="/admin/announcements" element={<SiteAnnouncements />} />
         <Route path="/login" element={<Login />} />
         <Route
           path="/signup"

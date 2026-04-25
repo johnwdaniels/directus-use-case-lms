@@ -27,6 +27,10 @@ export function SiteHeader() {
   const { openSearch } = useSearchDialog();
   const qc = useQueryClient();
   const { data: user } = useCurrentUser();
+  const roleName =
+    typeof user?.role === 'object' && user.role && 'name' in user.role ? String(user.role.name ?? '') : '';
+  const isInstructor = roleName.toLowerCase() === 'instructor';
+  const isAdmin = roleName.toLowerCase() === 'administrator' || roleName.toLowerCase() === 'admin';
 
   const userName =
     `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() || user?.email || 'Account';
@@ -51,6 +55,16 @@ export function SiteHeader() {
               {label}
             </NavLink>
           ))}
+          {isInstructor ? (
+            <NavLink to="/instructor/courses" className={navClass}>
+              Teach
+            </NavLink>
+          ) : null}
+          {isAdmin ? (
+            <NavLink to="/admin" className={navClass}>
+              Admin
+            </NavLink>
+          ) : null}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -118,6 +132,16 @@ export function SiteHeader() {
                 {label}
               </NavLink>
             ))}
+            {isInstructor ? (
+              <NavLink to="/instructor/courses" className={navClass} onClick={() => setMenuOpen(false)}>
+                Teach
+              </NavLink>
+            ) : null}
+            {isAdmin ? (
+              <NavLink to="/admin" className={navClass} onClick={() => setMenuOpen(false)}>
+                Admin
+              </NavLink>
+            ) : null}
             <hr className="my-2 border-slate-200" />
             <button
               type="button"
